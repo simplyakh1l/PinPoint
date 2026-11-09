@@ -1,0 +1,453 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import 'tailwindcss';
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Theme tokens. Light (cream) is the default; [data-theme="dark"] on <html>
+   repaints the whole app. Every palette constant in App.tsx and every
+   structural neutral in the dashboards reads one of these variables, so the
+   toggle is a single attribute flip.
+   Semantic colours (status green/red/amber/blue and the indigo accent) are
+   intentionally theme-independent — they read on both surfaces.
+   ─────────────────────────────────────────────────────────────────────────── */
+:root {
+  --bg: #e8e4dc;
+  /* app shell */
+  --cream: #f5f1ea;
+  /* primary screen background */
+  --surface: #faf8f5;
+  /* raised card */
+  --surface-2: #ece7de;
+  /* inset / segmented track */
+  --surface-3: #edeae4;
+  /* chips */
+  --ink: #1a1917;
+  /* primary text */
+  --ink-soft: #2e2a24;
+  /* body copy */
+  --ink-softer: #4a4235;
+  --muted: #8a7f6e;
+  /* secondary text */
+  --muted-2: #6b6456;
+  --muted-3: #5c5446;
+  --muted-4: #a09585;
+  --border: #ded7cb;
+  /* hairline */
+  --border-soft: rgba(26, 25, 23, 0.07);
+  --accent: #5b3ff8;
+  --card-grad-top: #ffffff;
+  --card-grad-bottom: #fdfbf8;
+  --ring-shadow: rgba(26, 25, 23, 0.14);
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #09090b;
+  /* zinc-950 */
+  --cream: #0c0c0f;
+  --surface: #141417;
+  /* ~zinc-900 */
+  --surface-2: #1c1c20;
+  --surface-3: #232329;
+  --ink: #f4f4f5;
+  /* zinc-100 */
+  --ink-soft: #e4e4e7;
+  --ink-softer: #d4d4d8;
+  --muted: #a1a1aa;
+  /* zinc-400 */
+  --muted-2: #a8a29e;
+  --muted-3: #c4c4cc;
+  --muted-4: #8b8b93;
+  --border: rgba(255, 255, 255, 0.10);
+  --border-soft: rgba(255, 255, 255, 0.08);
+  --accent: #7c6bff;
+  /* lifted indigo for contrast on dark */
+  --card-grad-top: #17171b;
+  --card-grad-bottom: #141417;
+  --ring-shadow: rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+* {
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg);
+  color: var(--ink);
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   The app shell. PHONE (<640px) is the base case and is unchanged: the frame
+   is the full screen. dvh, not vh: vh counts the collapsing URL bar, which
+   would push the bottom nav off-screen. From 640px (Tailwind's `sm`) the
+   frame fills the window instead of being a centred 390x844 mockup; html,
+   body and #root get a height only there, so the phone's dvh frame is never
+   centred inside a taller vh box.
+   640px: widest phone in CSS px is ~430; narrowest tablet ~768 — the gap is
+   comfortable.
+   ─────────────────────────────────────────────────────────────────────────── */
+.app-frame {
+  width: 100vw;
+  height: 100dvh;
+}
+
+/* Simple screens sit straight on the cream background. The two workspaces
+   (attendee / staff) switch to the deeper shell tone from 640px so their map
+   and panel cards stand out — matching the original responsive behaviour,
+   now theme-aware. */
+.frame-simple {
+  background: var(--cream);
+  transition: background-color 0.25s ease;
+}
+
+.frame-workspace {
+  background: var(--cream);
+  transition: background-color 0.25s ease;
+}
+
+@media (min-width: 640px) {
+  .frame-workspace {
+    background: var(--bg);
+  }
+}
+
+@media (min-width: 640px) {
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  .app-frame {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+@media (max-width: 639px) {
+
+  /* Full-bleed puts the nav against the physical screen edge, where the home
+     indicator lives. Lift it by the inset (0 on phones without one). */
+  .island-nav {
+    bottom: calc(1.25rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* minWidth:300 + border-box fits 320px, but a 280px foldable would overflow. */
+  .island-nav>div {
+    max-width: calc(100vw - 24px);
+  }
+}
+
+@keyframes radar-pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@keyframes route-dash {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+@keyframes pulse-slow {
+
+  0%,
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.4;
+    transform: scale(1.08);
+  }
+}
+
+.animate-radar {
+  animation: radar-pulse 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-route-flow {
+  animation: route-dash 1.2s linear infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 2s ease-in-out infinite;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   PINPOINT Route Animations & Micro-Interactions
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.custom-scrollbar::-webkit-scrollbar {
+  display: block;
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+@keyframes agent-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(91, 63, 248, 0.35), 0 4px 12px rgba(91, 63, 248, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(91, 63, 248, 0.6), 0 6px 20px rgba(91, 63, 248, 0.25);
+  }
+}
+
+.animate-agent-active {
+  animation: agent-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes handoff-flow {
+  from {
+    stroke-dashoffset: 16;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-handoff-flow {
+  animation: handoff-flow 0.8s linear infinite;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Command Center — premium surface system (Stripe / Linear / Vercel register)
+   Layered elevation, hairline rings, tactile hover lift, and quiet motion.
+   Purely presentational; no logic depends on these classes.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Elevation tokens — soft, multi-stop shadows instead of a single flat drop. */
+.cc-surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 1px 1px rgba(0, 0, 0, 0.03);
+  backdrop-filter: blur(8px);
+}
+
+.cc-surface-raised {
+  background: linear-gradient(180deg, var(--card-grad-top) 0%, var(--card-grad-bottom) 100%);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 8px 24px -12px var(--ring-shadow);
+}
+
+/* KPI / report card lift — the signature Linear-style hover. */
+.cc-card {
+  position: relative;
+  background: linear-gradient(180deg, var(--card-grad-top) 0%, var(--card-grad-bottom) 100%);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 10px 30px -18px var(--ring-shadow);
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.22s ease,
+    background 0.25s ease;
+}
+
+.cc-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(124, 107, 255, 0.3);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    0 18px 40px -20px rgba(91, 63, 248, 0.28);
+}
+
+/* A hairline accent that fades up on hover — the detail that reads "designed". */
+.cc-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(140deg, rgba(91, 63, 248, 0.5), rgba(91, 63, 248, 0) 45%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  pointer-events: none;
+}
+
+.cc-card:hover::after {
+  opacity: 1;
+}
+
+/* Accent rail that a KPI card can wear on its left edge. */
+.cc-rail::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 14%;
+  bottom: 14%;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--cc-rail, #5b3ff8);
+  opacity: 0.85;
+}
+
+/* Animated status badge — a soft breathing ring, calmer than a blink. */
+@keyframes cc-status-breathe {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--cc-ring, rgba(22, 163, 74, 0.45));
+  }
+  70% {
+    box-shadow: 0 0 0 5px rgba(0, 0, 0, 0);
+  }
+}
+
+.cc-badge-live {
+  position: relative;
+}
+
+.cc-badge-live .cc-dot {
+  animation: cc-status-breathe 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 999px;
+}
+
+/* Sheen that travels once across a freshly-mounted element. */
+@keyframes cc-sheen {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(220%); }
+}
+
+.cc-sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+.cc-sheen::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: translateX(-120%);
+  animation: cc-sheen 2.6s ease-in-out 0.3s both;
+  pointer-events: none;
+}
+
+/* Quiet entrance for cards streaming in. */
+@keyframes cc-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.cc-rise {
+  animation: cc-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Tabular figures so animated counters don't jitter their width. */
+.cc-tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Segmented control pill — the Vercel-style selected chip. */
+.cc-seg {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  padding: 3px;
+}
+
+.cc-seg-btn {
+  border-radius: 0.5rem;
+  transition: color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.cc-seg-btn[data-active="true"] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.12),
+    0 1px 1px rgba(0, 0, 0, 0.06);
+}
+
+/* Smooth accordion: grid-template-rows 0fr -> 1fr animates height with no
+   content jump. The inner element must have min-h-0 + overflow hidden. */
+.cc-acc {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease-in-out;
+}
+
+.cc-acc[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+.cc-acc > .cc-acc-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Frosted overlay for controls floating over the map — theme-aware glass. */
+.cc-glass {
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border-color: var(--border);
+}
+
+/* Slim scrollbar for log/console panels — matches the brief's scrollbar-thin. */
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+
+[data-theme="dark"] .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cc-card,
+  .cc-badge-live .cc-dot,
+  .cc-sheen::before,
+  .cc-rise {
+    animation: none !important;
+    transition: none !important;
+  }
+}
